@@ -1,0 +1,17 @@
+{
+  "name": "Track System Public Test",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/track-system",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Track Competition Platform",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start.sh",
+  "remoteUser": "node"
+}
