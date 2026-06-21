@@ -1,0 +1,76 @@
+<app-header></app-header>
+
+<div class="container mx-auto p-6 max-w-2xl fade-in">
+  <div class="mb-6 flex items-center gap-2">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2 class="text-2xl font-bold text-gray-800">建立賽事與匯入名單</h2>
+  </div>
+
+  <mat-card class="p-8">
+    <form class="flex flex-col gap-6">
+      
+      <h3 class="font-bold text-gray-700 border-b pb-2">步驟 1：設定賽事資訊</h3>
+      
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>賽事名稱</mat-label>
+        <input matInput [(ngModel)]="competitionData.name" name="name" placeholder="例如：115年全校運動會" required>
+        <mat-icon matSuffix>emoji_events</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>比賽地點</mat-label>
+        <input matInput [(ngModel)]="competitionData.location" name="location" placeholder="例如：學校田徑場">
+        <mat-icon matSuffix>place</mat-icon>
+      </mat-form-field>
+
+      <div class="flex gap-4">
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>開始日期</mat-label>
+          <input matInput [matDatepicker]="startPicker" [(ngModel)]="competitionData.dateStart" name="dateStart" required>
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>結束日期</mat-label>
+          <input matInput [matDatepicker]="endPicker" [(ngModel)]="competitionData.dateEnd" name="dateEnd" required>
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <h3 class="font-bold text-gray-700 border-b pb-2 mt-4">步驟 2：上傳選手名單 (Excel)</h3>
+      
+      <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition cursor-pointer relative">
+        <input type="file" (change)="onFileSelected($event)" 
+               accept=".xlsx, .xls"
+               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+        
+        <div *ngIf="!selectedFile">
+          <mat-icon class="text-4xl text-gray-400">cloud_upload</mat-icon>
+          <p class="text-gray-600 mt-2">點擊選擇 Excel 檔案 (.xlsx)</p>
+          <p class="text-xs text-gray-400 mt-1">欄位格式：姓名, 單位, 項目, 號碼布</p>
+        </div>
+        
+        <div *ngIf="selectedFile" class="flex items-center justify-center gap-2 text-indigo-600 font-bold">
+          <mat-icon>description</mat-icon>
+          {{ selectedFile.name }}
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <button mat-stroked-button type="button" (click)="goBack()">取消</button>
+        <button mat-flat-button color="primary" type="button" 
+                (click)="onSubmit()" 
+                [disabled]="isSubmitting" class="px-8 h-12 text-lg">
+          <span *ngIf="!isSubmitting">建立並匯入</span>
+          <span *ngIf="isSubmitting" class="flex items-center gap-2">
+            <mat-icon class="animate-spin text-sm">sync</mat-icon> 處理中...
+          </span>
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</div>

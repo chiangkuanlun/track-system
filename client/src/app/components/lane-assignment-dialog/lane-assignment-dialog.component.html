@@ -1,0 +1,76 @@
+<div class="flex flex-col h-[90vh]">
+  
+  <div class="flex justify-between items-center p-4 border-b shrink-0 bg-white">
+    <div>
+      <h2 class="text-xl font-bold text-gray-800">{{ data.eventName }} - 道次編排</h2>
+      <p class="text-xs text-gray-500">可拖曳選手調整道次或組別</p>
+    </div>
+    <div class="flex gap-2">
+      <button mat-stroked-button color="warn" (click)="autoInitialize()">
+        <mat-icon>refresh</mat-icon> 重新亂數分派
+      </button>
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="isLoading">
+        <mat-icon>save</mat-icon> 儲存設定
+      </button>
+      <button mat-icon-button (click)="close()"><mat-icon>close</mat-icon></button>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto bg-gray-100 p-4" cdkDropListGroup>
+    
+    <div *ngIf="isLoading" class="flex justify-center items-center h-full">
+      <mat-icon class="animate-spin text-4xl text-gray-400">sync</mat-icon>
+    </div>
+
+    <div *ngFor="let heat of heats; let i = index" class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+        <span class="font-bold text-gray-700">{{ heat.name }}</span>
+        <span class="text-xs text-gray-400">{{ heat.lanes.length }} 道次</span>
+      </div>
+
+      <div cdkDropList 
+           [cdkDropListData]="heat.lanes" 
+           (cdkDropListDropped)="drop($event)"
+           class="flex flex-col divide-y divide-gray-100">
+
+        <div *ngFor="let lane of heat.lanes; let laneIdx = index" cdkDrag class="flex items-center hover:bg-blue-50 transition bg-white group">
+          
+          <div class="w-12 py-3 flex justify-center items-center font-black text-gray-300 bg-gray-50 border-r border-gray-100 select-none">
+            {{ laneIdx + 1 }}
+          </div>
+
+          <div class="flex-1 px-4 py-2 flex items-center justify-between cursor-move">
+            
+            <div class="flex items-center gap-3" *ngIf="lane.athlete">
+              <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                {{ lane.athlete.team?.charAt(0) || '個' }}
+              </div>
+              <div>
+                <div class="font-bold text-gray-800 text-sm">{{ lane.athlete.name }}</div>
+                <div class="text-xs text-gray-400 flex gap-2">
+                  <span>{{ lane.athlete.team }}</span>
+                  <span *ngIf="lane.athlete.bibNumber">#{{ lane.athlete.bibNumber }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!lane.athlete" class="text-gray-300 text-sm italic">
+              (空道次)
+            </div>
+
+            <mat-icon class="text-gray-300 opacity-0 group-hover:opacity-100 transition scale-75">drag_indicator</mat-icon>
+          </div>
+
+          <div *cdkDragPreview class="bg-white shadow-xl rounded-lg p-3 flex items-center gap-3 border border-blue-500 w-64">
+             <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                {{ lane.athlete?.team?.charAt(0) || '?' }}
+              </div>
+              <div class="font-bold text-gray-800">{{ lane.athlete?.name || '空道次' }}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

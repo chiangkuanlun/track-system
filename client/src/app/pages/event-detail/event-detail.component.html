@@ -1,0 +1,207 @@
+<div class="flex flex-col h-screen bg-gray-50">
+  
+  <app-header class="shrink-0 relative z-50"></app-header>
+
+  <div class="flex-1 overflow-y-auto relative z-0">
+    
+    <div class="container mx-auto p-6 fade-in max-w-7xl">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div class="flex items-center gap-4">
+          <button mat-icon-button (click)="goBack()" class="bg-white shadow-sm border border-gray-200">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-2xl font-bold text-gray-800 my-0">{{ event?.name }}</h1>
+              
+              <span *ngIf="event?.type === 'relay'" class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded font-bold border border-purple-200">
+                接力賽
+              </span>
+              <span *ngIf="event?.type === 'field'" class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold border border-green-200">
+                田賽
+              </span>
+              <span *ngIf="event?.type === 'track'" class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold border border-blue-200">
+                徑賽
+              </span>
+            </div>
+            <p class="text-gray-500 text-sm mt-1">
+              共 {{ event?.type === 'relay' ? relayTeams.length + ' 隊' : athletes.length + ' 人' }} 報名
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex gap-2">
+          <ng-container *ngIf="event?.type !== 'field'">
+            <button mat-flat-button color="primary" (click)="saveHeats()"
+                    *ngIf="event?.heats && event.heats.length > 0"
+                    [disabled]="isSavingHeats">
+              <mat-icon>save</mat-icon> {{ isSavingHeats ? '儲存中...' : '儲存變更' }}
+            </button>
+            
+            <button mat-stroked-button color="accent" (click)="openLaneAssignment()">
+              <mat-icon>refresh</mat-icon> 重新分派
+            </button>
+          </ng-container>
+
+          <button mat-stroked-button color="primary">
+            <mat-icon>print</mat-icon> 列印名單
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="flex justify-center py-20">
+        <mat-icon class="animate-spin text-gray-400 text-4xl">sync</mat-icon>
+      </div>
+
+      <ng-container *ngIf="!isLoading">
+
+        <div *ngIf="event?.type !== 'field' && event?.heats && event.heats.length > 0" 
+             class="flex flex-col gap-8" cdkDropListGroup>
+          
+          <div *ngFor="let heat of event.heats" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            
+            <div class="bg-indigo-900 text-white px-4 py-2 flex justify-between items-center">
+              <h3 class="font-bold text-lg m-0">{{ heat.name }}</h3>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-indigo-200 flex items-center gap-1">
+                  <mat-icon class="text-xs scale-75">touch_app</mat-icon> 可拖曳調整
+                </span>
+                <span class="text-xs bg-white/20 px-2 py-1 rounded">{{ heat.lanes.length }} 道次</span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <div class="min-w-[800px] grid grid-cols-8 divide-x divide-gray-100"
+                   cdkDropList
+                   [cdkDropListData]="heat.lanes"
+                   (cdkDropListDropped)="drop($event)"
+                   cdkDropListOrientation="horizontal">
+                
+                <div *ngFor="let lane of heat.lanes" 
+                     class="flex flex-col h-24 relative group hover:bg-blue-50/50 transition" 
+                     cdkDrag>
+                  
+                  <div class="bg-gray-50 text-gray-400 text-xs font-bold text-center py-1 border-b border-gray-100 select-none cursor-grab active:cursor-grabbing">
+                    第 {{ lane.laneNumber }} 道
+                  </div>
+
+                  <ng-container *ngIf="getAthleteDetails(lane.athleteId) as athlete; else emptyLane">
+                    <div class="flex-1 p-1 flex flex-col justify-center items-center text-center cursor-move"
+                         (click)="editAthlete(athlete)">
+                      
+                      <div class="font-bold text-gray-800 text-sm leading-tight truncate w-full px-1 mb-1">
+                        {{ athlete.name }}
+                      </div>
+                      
+                      <div class="text-xs text-gray-500 truncate w-full px-1 leading-tight">
+                        {{ athlete.team }}
+                      </div>
+                      
+                      <div class="text-[10px] bg-gray-100 text-gray-600 rounded px-1 mt-1 border border-gray-200" *ngIf="athlete.bibNumber">
+                        #{{ athlete.bibNumber }}
+                      </div>
+                    </div>
+
+                    <div *cdkDragPreview class="bg-white shadow-xl rounded p-2 border border-indigo-500 w-32 flex flex-col items-center">
+                       <div class="font-bold text-gray-800">{{ athlete.name }}</div>
+                       <div class="text-xs text-gray-500">{{ athlete.team }}</div>
+                    </div>
+                  </ng-container>
+
+                  <ng-template #emptyLane>
+                    <div class="flex-1 flex flex-col justify-center items-center text-gray-200 bg-gray-50/30 cursor-default">
+                      <span class="text-xs italic select-none">空</span>
+                    </div>
+                  </ng-template>
+
+                  <div *cdkDragPlaceholder class="opacity-0 bg-gray-100"></div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="event?.type === 'field' || !event?.heats || event.heats.length === 0">
+          
+          <div *ngIf="event?.type !== 'field'" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 flex items-center gap-3">
+             <mat-icon class="text-yellow-600">info</mat-icon>
+             <div>
+               <p class="font-bold">尚未進行分組</p>
+               <p class="text-sm">請點擊右上角「初始分組與賽道分派」按鈕來建立賽程。</p>
+             </div>
+          </div>
+
+          <div *ngIf="event?.type === 'relay'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <mat-card *ngFor="let team of relayTeams" class="border-l-[6px] border-l-purple-500 shadow-sm hover:shadow-md transition bg-white">
+              <mat-card-header>
+                <div mat-card-avatar class="bg-purple-100 text-purple-600 flex items-center justify-center rounded-full font-bold w-12 h-12 text-lg">
+                  {{ team.name.charAt(0) }}
+                </div>
+                <mat-card-title class="pt-1 text-xl font-bold text-gray-800">{{ team.name }}</mat-card-title>
+                <mat-card-subtitle class="text-purple-600 font-bold">{{ team.members.length }} 位隊員</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content class="pt-4">
+                <div class="flex flex-wrap gap-2">
+                  <div *ngFor="let member of team.members" 
+                      class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm text-gray-700 cursor-pointer hover:bg-gray-100 hover:border-indigo-300 transition"
+                      (click)="editAthlete(member)">
+                    <mat-icon class="text-base scale-75 text-gray-400">person</mat-icon>
+                    {{ member.name }}
+                  </div>
+                  <button class="flex items-center gap-1 bg-white border border-dashed border-gray-300 rounded-full px-3 py-1 text-sm text-gray-400 cursor-pointer hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 transition"
+                    (click)="addRelayMember(team.name)">
+                    <mat-icon class="text-base scale-75">add</mat-icon> 新增
+                  </button>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <div *ngIf="relayTeams.length === 0" class="col-span-full text-center py-20 text-gray-400 bg-white rounded-lg border border-dashed">
+              <mat-icon class="text-6xl opacity-20 mb-2">groups_3</mat-icon>
+              <p>目前無報名隊伍</p>
+            </div>
+          </div>
+
+          <div *ngIf="event?.type !== 'relay'" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <mat-card *ngFor="let athlete of athletes" 
+                      class="group hover:shadow-xl transition cursor-pointer border-t-[6px] border-t-blue-500 bg-white overflow-hidden relative"
+                      (click)="editAthlete(athlete)">
+              <div class="p-5 flex flex-col h-full relative z-10">
+                <div class="absolute -top-2 -right-2 text-5xl font-black text-gray-100 select-none group-hover:text-blue-50 transition-colors z-0">
+                  {{ athlete.bibNumber }}
+                </div>
+                <div class="relative z-10">
+                  <div class="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded mb-2">
+                    BIB: {{ athlete.bibNumber }}
+                  </div>
+                  <h3 class="text-xl font-bold text-gray-800 mb-1 truncate" [matTooltip]="athlete.name">
+                    {{ athlete.name }}
+                  </h3>
+                  <div class="flex items-center gap-1 text-gray-500 text-sm font-medium">
+                    <mat-icon class="text-base scale-90 text-gray-400">school</mat-icon>
+                    <span class="truncate">{{ athlete.team || '個人' }}</span>
+                  </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-100 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <button mat-icon-button class="scale-75 bg-blue-50 text-blue-600 hover:bg-blue-100" (click)="$event.stopPropagation(); editAthlete(athlete)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button class="scale-75 bg-red-50 text-red-600 hover:bg-red-100" (click)="$event.stopPropagation(); deleteAthlete(athlete)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card>
+            <div *ngIf="athletes.length === 0" class="col-span-full text-center py-20 text-gray-400 bg-white rounded-lg border border-dashed">
+              <mat-icon class="text-6xl opacity-20 mb-2">person_off</mat-icon>
+              <p>目前無選手報名</p>
+            </div>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </div>
+</div>

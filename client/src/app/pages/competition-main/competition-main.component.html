@@ -1,0 +1,252 @@
+<app-header></app-header>
+
+<mat-sidenav-container class="h-[calc(100vh-64px)] bg-gray-50 relative z-0">
+  
+  <mat-sidenav 
+    mode="side" 
+    opened 
+    class="border-r border-gray-200 shadow-sm bg-white flex flex-col h-full"
+    style="width: 150px; min-width: 150px; max-width: 150px;">
+    
+    <div class="p-3 border-b border-gray-100 flex items-center justify-between bg-gray-50 shrink-0">
+      <h3 class="font-bold text-gray-700 flex items-center gap-1 text-xs">
+        <mat-icon class="text-indigo-500 scale-75">category</mat-icon>
+        組別
+      </h3>
+      <button mat-icon-button class="scale-75 -mr-2" (click)="goBack()" title="回儀表板">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+    
+    <div class="flex-1 overflow-y-auto no-scrollbar">
+      <div *ngIf="isLoading && !groups.length" class="p-4 text-center">
+        <mat-icon class="animate-spin text-gray-400">sync</mat-icon>
+      </div>
+
+      <button 
+        *ngFor="let group of groups"
+        (click)="selectGroup(group)"
+        class="w-full text-left px-2 py-3 border-b border-gray-50 hover:bg-gray-50 flex items-center gap-1 transition duration-200 outline-none focus:bg-gray-100"
+        [class.bg-indigo-50]="selectedGroup?._id === group._id"
+        [class.border-l-4]="selectedGroup?._id === group._id"
+        [class.border-l-indigo-500]="selectedGroup?._id === group._id"
+        [class.text-indigo-700]="selectedGroup?._id === group._id">
+        <span class="truncate font-medium text-xs">{{ group.name }}</span>
+      </button>
+
+      <div *ngIf="!isLoading && groups.length === 0" class="p-4 text-center text-xs text-gray-400">
+        無資料
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="bg-gray-50 p-6 relative">
+    
+    <div *ngIf="selectedGroup" class="fade-in max-w-7xl mx-auto">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <h2 class="text-2xl font-bold text-gray-800">{{ selectedGroup.name }}</h2>
+            <span class="text-lg text-indigo-600 font-medium" *ngIf="getAssignedRecordersNames()">
+              {{ getAssignedRecordersNames() }}
+            </span>
+          </div>
+          <p class="text-gray-500 text-sm">比賽項目列表與管理</p>
+        </div>
+        
+        <div class="flex gap-2 relative">
+          <button *ngIf="isAdmin" mat-stroked-button color="accent" (click)="toggleRecorderMenu()" 
+                  [class.bg-indigo-50]="isAssigningRecorder" class="border-indigo-200 text-indigo-700">
+            <mat-icon>manage_accounts</mat-icon> 分派人員
+          </button>
+
+          <div *ngIf="isAssigningRecorder" 
+               class="absolute right-0 top-12 w-80 bg-white shadow-xl rounded-lg border border-gray-200 z-50 p-0 fade-in flex flex-col overflow-hidden">
+            <div class="flex justify-between items-center px-4 py-3 bg-gray-50 border-b">
+              <div>
+                <span class="font-bold text-gray-700 text-sm">人員列表</span>
+                <span class="text-xs text-indigo-500 block">設定對象: {{ selectedGroup.name }}</span>
+              </div>
+              <button mat-icon-button class="scale-75" (click)="toggleRecorderMenu()"><mat-icon>close</mat-icon></button>
+            </div>
+            <div class="max-h-60 overflow-y-auto p-2 no-scrollbar" *ngIf="!isCreatingRecorder">
+              <div *ngFor="let recorder of recorders" 
+                   class="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer transition"
+                   (click)="toggleAssignment(recorder)">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                    {{ recorder.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="text-sm font-bold text-gray-800">{{ recorder.name }}</div>
+                    <div class="text-xs text-gray-400">@{{ recorder.username }}</div>
+                  </div>
+                </div>
+                <mat-icon *ngIf="recorder.isAssigned" class="text-green-500">check_circle</mat-icon>
+                <mat-icon *ngIf="!recorder.isAssigned" class="text-gray-200">radio_button_unchecked</mat-icon>
+              </div>
+              <button mat-button color="primary" class="w-full mt-2 border-t border-gray-100 pt-2" (click)="isCreatingRecorder = true">
+                <mat-icon>person_add</mat-icon> 建立新人員
+              </button>
+            </div>
+            <div class="p-4 bg-white" *ngIf="isCreatingRecorder">
+              <h4 class="text-sm font-bold text-gray-700 mb-2">新增記錄人員</h4>
+              <div class="flex flex-col gap-2">
+                <input class="border rounded px-2 py-1 text-sm" placeholder="姓名" [(ngModel)]="newRecorderData.name">
+                <input class="border rounded px-2 py-1 text-sm" placeholder="帳號" [(ngModel)]="newRecorderData.username">
+                <input class="border rounded px-2 py-1 text-sm" placeholder="密碼" type="password" [(ngModel)]="newRecorderData.password">
+                <div class="flex gap-2 mt-2">
+                  <button mat-stroked-button class="flex-1" (click)="isCreatingRecorder = false">取消</button>
+                  <button mat-flat-button color="primary" class="flex-1" (click)="createRecorder()">建立</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button *ngIf="isAdmin" mat-stroked-button color="primary" (click)="autoAssignPersonnel()">
+            <mat-icon>auto_awesome</mat-icon> 自動分派
+          </button>
+
+          <button *ngIf="isAdmin" mat-flat-button color="primary" (click)="addEvent()">
+            <mat-icon>add</mat-icon> 新增項目
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+        
+        <div *ngIf="events.length === 0" class="col-span-full text-center py-20 text-gray-400 bg-white rounded-lg border border-dashed">
+          <mat-icon class="text-6xl opacity-20 mb-2">playlist_remove</mat-icon>
+          <p>此組別目前沒有比賽項目</p>
+          <button *ngIf="isAdmin" mat-stroked-button color="primary" class="mt-4" (click)="addEvent()">
+            <mat-icon>add</mat-icon> 立即新增項目
+          </button>
+        </div>
+
+        <mat-card *ngFor="let event of events" 
+                  class="hover:shadow-lg transition flex flex-col h-full group border-l-[6px]"
+                  [class.border-l-blue-500]="event.type === 'track'"
+                  [class.border-l-green-500]="event.type === 'field'"
+                  [class.border-l-purple-500]="event.type === 'relay'">
+          
+          <mat-card-header class="relative pb-2">
+            <button *ngIf="isAdmin" mat-icon-button class="absolute -left-2 -top-2 scale-90 opacity-70 hover:opacity-100" 
+                    [matTooltip]="'目前類型: ' + (event.type === 'relay' ? '接力' : event.type === 'field' ? '田賽' : '徑賽')" 
+                    (click)="toggleEventType(event)">
+              <mat-icon *ngIf="event.type === 'track'" class="text-blue-600">directions_run</mat-icon>
+              <mat-icon *ngIf="event.type === 'field'" class="text-green-600">emoji_events</mat-icon>
+              <mat-icon *ngIf="event.type === 'relay'" class="text-purple-600">groups</mat-icon>
+            </button>
+
+            <mat-card-title class="text-lg font-bold pl-8 pt-1 cursor-pointer hover:text-indigo-600 transition" 
+                            [routerLink]="['/competition/event', event._id]">
+              {{ event.name }}
+            </mat-card-title>
+          </mat-card-header>
+
+          <mat-card-content class="flex-1 py-2 pl-4">
+            
+            <div class="flex flex-wrap gap-2 mb-4 min-h-[32px]">
+              <mat-chip-listbox *ngIf="event.rounds?.length > 0">
+                <mat-chip-option *ngFor="let round of event.rounds" 
+                                 selected color="accent" class="text-xs scale-90 origin-left select-none pointer-events-none">
+                  {{ round }}
+                </mat-chip-option>
+              </mat-chip-listbox>
+              <span *ngIf="!event.rounds || event.rounds.length === 0" class="text-xs text-gray-400 italic py-1">
+                尚未設定賽制
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
+              
+              <div class="flex items-center gap-3">
+                <mat-icon class="text-gray-400">person_outline</mat-icon>
+                <div class="flex flex-col leading-none">
+                  <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">已報名</span>
+                  <span class="text-base font-bold text-gray-700">
+                    {{ event.athleteCount }} 
+                    <span class="text-xs font-normal">{{ event.type === 'relay' ? '隊' : '人' }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <div *ngIf="event.heats && event.heats.length > 0" 
+                   class="flex items-center gap-1 text-teal-600 bg-teal-50 px-2 py-1 rounded border border-teal-100"
+                   matTooltip="已完成初始分組與道次安排">
+                <mat-icon class="text-base scale-75 h-4 w-4 leading-none">alt_route</mat-icon>
+                <span class="text-[10px] font-bold">已排道次</span>
+              </div>
+
+            </div>
+
+          </mat-card-content>
+
+          <mat-divider></mat-divider>
+
+          <mat-card-actions align="end" class="bg-gray-50/50 gap-1 px-2">
+            
+            <button *ngIf="isAdmin" mat-icon-button color="primary" [matMenuTriggerFor]="roundMenu" matTooltip="設定賽制">
+              <mat-icon>alt_route</mat-icon>
+            </button>
+            <mat-menu #roundMenu="matMenu">
+              <button mat-menu-item (click)="changeEventRounds(event, 'final')" 
+                      [class.menu-active]="isRoundSelected(event, 'final')">
+                <mat-icon *ngIf="isRoundSelected(event, 'final')">check</mat-icon>
+                <mat-icon *ngIf="!isRoundSelected(event, 'final')" class="opacity-0">check</mat-icon>
+                <span>直接決賽</span>
+              </button>
+              
+              <button mat-menu-item (click)="changeEventRounds(event, 'pre-final')"
+                      [class.menu-active]="isRoundSelected(event, 'pre-final')">
+                <mat-icon *ngIf="isRoundSelected(event, 'pre-final')">check</mat-icon>
+                <mat-icon *ngIf="!isRoundSelected(event, 'pre-final')" class="opacity-0">check</mat-icon>
+                <span>預賽 + 決賽</span>
+              </button>
+              
+              <button mat-menu-item (click)="changeEventRounds(event, 'pre-semi-final')"
+                      [class.menu-active]="isRoundSelected(event, 'pre-semi-final')">
+                <mat-icon *ngIf="isRoundSelected(event, 'pre-semi-final')">check</mat-icon>
+                <mat-icon *ngIf="!isRoundSelected(event, 'pre-semi-final')" class="opacity-0">check</mat-icon>
+                <span>預 + 準 + 決</span>
+              </button>
+              
+              <button mat-menu-item (click)="changeEventRounds(event, 'pre-quarter-semi-final')"
+                      [class.menu-active]="isRoundSelected(event, 'pre-quarter-semi-final')">
+                <mat-icon *ngIf="isRoundSelected(event, 'pre-quarter-semi-final')">check</mat-icon>
+                <mat-icon *ngIf="!isRoundSelected(event, 'pre-quarter-semi-final')" class="opacity-0">check</mat-icon>
+                <span>預 + 複 + 準 + 決</span>
+              </button>
+            </mat-menu>
+
+            <button *ngIf="isAdmin" mat-icon-button color="primary" matTooltip="修改名稱" (click)="editEvent(event)">
+               <mat-icon>edit</mat-icon>
+            </button>
+
+            <button mat-icon-button color="warn" matTooltip="刪除項目" 
+                    (click)="deleteEvent(event)"
+                    *ngIf="event.athleteCount === 0">
+              <mat-icon>delete</mat-icon>
+            </button>
+            
+            <button mat-icon-button disabled *ngIf="event.athleteCount > 0">
+            </button>
+            
+            <span class="flex-1"></span>
+            
+            <button mat-button color="primary" class="font-bold" [routerLink]="['/competition/event', event._id]">
+              進入項目 <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
+
+    <div *ngIf="!selectedGroup && !isLoading" class="h-full flex flex-col items-center justify-center text-gray-400">
+      <mat-icon class="text-8xl opacity-20 mb-4">touch_app</mat-icon>
+      <p class="text-lg">請從左側選擇一個競賽組別</p>
+    </div>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>

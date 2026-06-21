@@ -1,0 +1,38 @@
+<div class="flex h-screen w-full items-center justify-center bg-gray-100">
+  <mat-card class="w-full max-w-sm p-6 shadow-xl">
+    <mat-card-header class="mb-4 justify-center">
+      <mat-card-title class="text-2xl font-bold text-indigo-700">田徑競賽紀錄系統</mat-card-title>
+      <mat-card-subtitle class="mt-2 text-center">請登入您的帳號</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form (submit)="onLogin()" class="flex flex-col gap-4">
+        
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>帳號</mat-label>
+          <input matInput [(ngModel)]="username" name="username" placeholder="請輸入帳號" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>密碼</mat-label>
+          <input matInput [(ngModel)]="password" name="password" type="password" placeholder="請輸入密碼" required>
+        </mat-form-field>
+
+        <div class="mt-4 flex flex-col gap-2">
+          <button mat-flat-button color="primary" class="w-full py-6 text-lg" type="submit">
+            登入系統
+          </button>
+          
+          <button type="button" mat-stroked-button color="warn" (click)="quickRegister()">
+            (開發用) 建立 admin 帳號
+          </button>
+        </div>
+
+      </form>
+    </mat-card-content>
+    
+    <mat-card-footer class="pb-6 text-center text-sm text-gray-500">
+      &copy; 2026 RaceScore System
+    </mat-card-footer>
+  </mat-card>
+</div>

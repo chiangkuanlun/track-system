@@ -1,0 +1,54 @@
+<app-header></app-header>
+
+<div class="container mx-auto p-6 max-w-2xl fade-in">
+  <div class="mb-6 flex items-center gap-2">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2 class="text-2xl font-bold text-gray-800">修改賽事資訊</h2>
+  </div>
+
+  <div *ngIf="isLoading" class="text-center py-10">
+    <mat-icon class="animate-spin text-gray-400">sync</mat-icon>
+  </div>
+
+  <mat-card class="p-8" *ngIf="!isLoading">
+    <form (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+      
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>賽事名稱</mat-label>
+        <input matInput [(ngModel)]="competitionData.name" name="name" required>
+        <mat-icon matSuffix>edit</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>比賽地點</mat-label>
+        <input matInput [(ngModel)]="competitionData.location" name="location">
+        <mat-icon matSuffix>place</mat-icon>
+      </mat-form-field>
+
+      <div class="flex gap-4">
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>開始日期</mat-label>
+          <input matInput [matDatepicker]="startPicker" [(ngModel)]="competitionData.dateStart" name="dateStart" required>
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="flex-1">
+          <mat-label>結束日期</mat-label>
+          <input matInput [matDatepicker]="endPicker" [(ngModel)]="competitionData.dateEnd" name="dateEnd" required>
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-4">
+        <button mat-stroked-button type="button" (click)="goBack()">取消</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting" class="px-8">
+          {{ isSubmitting ? '儲存中...' : '儲存修改' }}
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</div>

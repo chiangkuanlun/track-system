@@ -1,0 +1,113 @@
+/* Tailwind 的基本引入 (保持原本的) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------ */
+/* ★ 關鍵修復：定義 fade-in 動畫，否則畫面會是透明的 */
+/* ------------------------------------------------ */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out forwards; /* forwards 確保動畫結束後停在顯示狀態 */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 隱藏 Scrollbar 但保留捲動功能 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* 確保 HTML/Body 佔滿高度 (選用) */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* client/src/styles.scss */
+
+/* =========================================
+   Angular Material Overlay 樣式全域修正
+   解決 Select, Menu, Datepicker, Tooltip 透明問題
+   ========================================= */
+
+/* 1. 下拉選單 (Select) */
+.mat-mdc-select-panel {
+  background-color: #ffffff !important;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+}
+
+/* 2. 選單 (Menu) */
+.mat-mdc-menu-panel {
+  background-color: #ffffff !important;
+  min-width: 180px;
+}
+.mat-mdc-menu-item {
+  background-color: transparent;
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}
+
+/* 3. 提示框 (Tooltip) */
+.mat-mdc-tooltip .mdc-tooltip__surface {
+  background-color: #424242 !important;
+  color: white !important;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+/* ★ 4. 日曆 (Datepicker) - 修正您現在遇到的問題 */
+.mat-datepicker-content {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+  color: #333 !important;
+}
+
+/* 確保日曆內部的按鈕與文字顏色正常 */
+.mat-calendar-body-cell-content {
+  color: #333 !important;
+}
+.mat-calendar-body-selected {
+  background-color: #3f51b5 !important; /* Primary Color */
+  color: #fff !important;
+}
+
+/* 5. 對話框 (Dialog) */
+.mdc-dialog__surface {
+  background-color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 0 !important; /* 避免預設 padding 影響排版 */
+}
+
+/* 自訂捲軸樣式 (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}

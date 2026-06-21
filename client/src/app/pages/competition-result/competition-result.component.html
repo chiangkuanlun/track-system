@@ -1,0 +1,131 @@
+<app-header></app-header>
+
+<div class="container mx-auto p-4 md:p-6 fade-in max-w-7xl pb-20">
+
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-4">
+      <button mat-icon-button (click)="goBack()" class="bg-white shadow-sm border border-gray-200">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800 my-0">{{ event?.name }} - 成績輸入</h1>
+        <p class="text-gray-500 text-sm mt-1" *ngIf="event?.type === 'track'">徑賽項目：請輸入秒數</p>
+        <p class="text-gray-500 text-sm mt-1" *ngIf="event?.type === 'field'">田賽項目：請輸入距離/高度</p>
+      </div>
+    </div>
+    
+    <div class="flex gap-2">
+      <button mat-stroked-button color="warn" (click)="resetResults()" [disabled]="isSaving || isLoading">
+      <mat-icon>restart_alt</mat-icon> 清空重置
+    </button>
+
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="isSaving || isLoading">
+        <mat-icon>save</mat-icon> {{ isSaving ? '儲存中...' : '儲存成績' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-20">
+    <mat-icon class="animate-spin text-gray-400 text-4xl">sync</mat-icon>
+  </div>
+
+  <ng-container *ngIf="!isLoading && event">
+
+    <mat-tab-group animationDuration="0ms" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      
+      <mat-tab *ngFor="let heat of event.heats; let i = index" [label]="heat.name">
+        <div class="p-6">
+          
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-gray-700">成績登錄表</h3>
+            <button mat-stroked-button (click)="autoRank(i)" matTooltip="根據目前輸入的成績自動排序名次">
+              <mat-icon>sort</mat-icon> 自動排名 (參考用)
+            </button>
+          </div>
+
+          <table mat-table [dataSource]="heat.lanes" class="w-full border border-gray-200 rounded-lg overflow-hidden">
+
+            <ng-container matColumnDef="lane">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-50 w-16 text-center"> 道次 </th>
+              <td mat-cell *matCellDef="let lane" class="text-center font-bold text-gray-500"> 
+                {{ lane.laneNumber }} 
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="bib">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-50 w-20"> 號碼 </th>
+              <td mat-cell *matCellDef="let lane"> 
+                <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs" 
+                      *ngIf="getAthlete(lane.athleteId)">
+                  {{ getAthlete(lane.athleteId)?.bibNumber }}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-50"> 姓名 </th>
+              <td mat-cell *matCellDef="let lane" class="font-bold text-gray-800"> 
+                {{ getAthlete(lane.athleteId)?.name || '--' }} 
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="team">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-50"> 單位 </th>
+              <td mat-cell *matCellDef="let lane" class="text-gray-500"> 
+                {{ getAthlete(lane.athleteId)?.team || '' }} 
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-50 w-32"> 狀態 </th>
+              <td mat-cell *matCellDef="let lane"> 
+                <mat-form-field appearance="outline" class="w-full dense-form-field mt-3" *ngIf="lane.athleteId">
+                  <mat-select [(ngModel)]="lane.status">
+                    <mat-option *ngFor="let opt of statusOptions" [value]="opt.value">
+                      {{ opt.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="result">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-50 w-32"> 成績 </th>
+              <td mat-cell *matCellDef="let lane"> 
+                <mat-form-field appearance="outline" class="w-full dense-form-field mt-3" 
+                                *ngIf="lane.athleteId && lane.status === 'Normal'">
+                  <input matInput [(ngModel)]="lane.result" placeholder="例如: 10.56">
+                </mat-form-field>
+                <span *ngIf="lane.athleteId && lane.status !== 'Normal'" class="text-red-500 font-bold">
+                  {{ lane.status }}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef class="bg-gray-50 w-24 text-center"> 名次 </th>
+              <td mat-cell *matCellDef="let lane" class="text-center"> 
+                <mat-form-field appearance="outline" class="w-16 dense-form-field mt-3 text-center" 
+                                *ngIf="lane.athleteId && lane.status === 'Normal'">
+                  <input matInput type="number" [(ngModel)]="lane.rank" min="1">
+                </mat-form-field>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+          </table>
+          
+          <div *ngIf="!heat.lanes || heat.lanes.length === 0" class="text-center py-10 text-gray-400">
+            本組尚無資料
+          </div>
+
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+
+  </ng-container>
+
+</div>

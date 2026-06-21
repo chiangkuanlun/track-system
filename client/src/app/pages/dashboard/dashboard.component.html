@@ -1,0 +1,250 @@
+<app-header></app-header>
+
+<div class="min-h-screen bg-gray-50 p-3 fade-in overflow-hidden"> 
+  
+  <div class="max-w-[1600px] mx-auto h-full flex flex-col">
+    
+    <div class="mb-3">
+      <mat-card class="rounded-xl shadow-sm border border-cyan-200 border-l-[6px] border-l-cyan-600 overflow-hidden"
+                style="background-color: #ecfeff;">
+        
+        <div *ngIf="currentCompetition; else noCompInfo">
+          <div class="flex flex-col md:flex-row md:items-center justify-between p-3">
+            
+            <div class="flex items-center gap-3">
+              <div class="bg-cyan-100 text-cyan-700 p-2 rounded-full scale-90">
+                <mat-icon>emoji_events</mat-icon>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-cyan-900 m-0 leading-tight">{{ currentCompetition.name }}</h2>
+                <p class="text-cyan-700 text-xs mt-0.5">
+                  <mat-icon class="align-middle text-[14px] w-4 h-4">event</mat-icon> 
+                  {{ currentCompetition.createdAt | date:'yyyy/MM/dd' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-2 mt-2 md:mt-0">
+              <div class="text-center px-3 py-1 bg-white/80 rounded-lg border border-cyan-100 min-w-[70px]">
+                <div class="text-lg font-black text-blue-600 leading-none">{{ currentCompetition.teamCount || 0 }}</div>
+                <div class="text-[10px] text-gray-500 font-bold">隊伍</div>
+              </div>
+              <div class="text-center px-3 py-1 bg-white/80 rounded-lg border border-cyan-100 min-w-[70px]">
+                <div class="text-lg font-black text-green-600 leading-none">{{ currentCompetition.athleteCount || 0 }}</div>
+                <div class="text-[10px] text-gray-500 font-bold">選手</div>
+              </div>
+              <div class="text-center px-3 py-1 bg-white/80 rounded-lg border border-cyan-100 min-w-[70px]">
+                <div class="text-lg font-black text-purple-600 leading-none">{{ currentCompetition.groupCount || 0 }}</div>
+                <div class="text-[10px] text-gray-500 font-bold">分組</div>
+              </div>
+              <div class="text-center px-3 py-1 bg-white/80 rounded-lg border border-cyan-100 min-w-[70px]">
+                <div class="text-lg font-black text-pink-600 leading-none">{{ currentCompetition.eventCount || 0 }}</div>
+                <div class="text-[10px] text-gray-500 font-bold">項目</div>
+              </div>
+            </div>
+
+            <div class="mt-2 md:mt-0 flex gap-2" *ngIf="user?.role === 'admin' || user?.role === 'Admin'">
+              <button mat-stroked-button color="primary" class="bg-white !px-3 !h-8 text-xs" 
+                      [routerLink]="['/competition/edit', currentCompetition._id]">
+                <mat-icon class="text-sm scale-75">edit</mat-icon> 修改
+              </button>
+              <button mat-stroked-button color="warn" class="bg-white !px-3 !h-8 text-xs" 
+                      (click)="deleteCompetition()">
+                <mat-icon class="text-sm scale-75">delete</mat-icon> 移除
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <ng-template #noCompInfo>
+          <div class="flex items-center justify-center p-4 text-gray-400 bg-gray-50/50 gap-4">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-2xl text-gray-300">emoji_events</mat-icon>
+              <span class="font-bold text-sm">無進行中賽事</span>
+            </div>
+            <button mat-flat-button color="primary" routerLink="/import" class="!h-8 text-xs" 
+                    *ngIf="user?.role === 'admin' || user?.role === 'Admin'">
+              <mat-icon class="text-sm scale-75">add</mat-icon> 建立
+            </button>
+          </div>
+        </ng-template>
+      </mat-card>
+    </div>
+
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 items-stretch flex-1">
+      
+      <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3 h-full content-start">
+        
+        <ng-container *ngIf="user?.role === 'admin' || user?.role === 'Admin'">
+          
+          <mat-card class="rounded-xl shadow-sm border border-violet-200 border-l-[6px] border-l-violet-500 hover:shadow-md transition cursor-pointer overflow-hidden relative group"
+                    style="background-color: #f5f3ff;"
+                    *ngIf="currentCompetition"
+                    [routerLink]="['/competition', currentCompetition._id]"> 
+            
+            <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-15 transition pointer-events-none">
+              <mat-icon class="text-8xl text-violet-600">settings</mat-icon>
+            </div>
+
+            <mat-card-header class="pt-3 px-3">
+              <div mat-card-avatar class="bg-white text-violet-600 flex items-center justify-center rounded-full w-10 h-10 shadow-sm">
+                 <mat-icon>settings_suggest</mat-icon>
+              </div>
+              <mat-card-title class="text-base font-bold text-violet-900 pt-1 mb-0">賽務管理</mat-card-title>
+              <mat-card-subtitle class="text-violet-600 text-xs font-bold mt-0">分組 / 道次 / 賽程</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content class="px-3 pt-2 pb-2 text-violet-800/80 text-xs min-h-[40px]">
+              進入賽事後台，進行各項目的細部設定、手動調整道次以及晉級規則管理。
+            </mat-card-content>
+            
+            <div class="px-3 pb-3 mt-auto text-right">
+              <button mat-flat-button color="primary" class="!h-8 text-xs w-full">
+                進入管理 <mat-icon iconPositionEnd class="text-sm scale-75">arrow_forward</mat-icon>
+              </button>
+            </div>
+          </mat-card>
+
+          <mat-card class="rounded-xl shadow-sm border border-blue-200 border-l-[6px] border-l-blue-500 hover:shadow-md transition cursor-pointer overflow-hidden relative group"
+                    style="background-color: #eff6ff;">
+            
+            <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-15 transition pointer-events-none">
+              <mat-icon class="text-8xl text-blue-600">group</mat-icon>
+            </div>
+            
+            <mat-card-header class="pt-3 px-3">
+               <div mat-card-avatar class="bg-white text-blue-600 flex items-center justify-center rounded-full w-10 h-10 shadow-sm">
+                   <mat-icon>manage_accounts</mat-icon>
+               </div>
+              <mat-card-title class="text-base font-bold text-blue-900 pt-1 mb-0">帳號管理</mat-card-title>
+              <mat-card-subtitle class="text-blue-600 text-xs font-bold mt-0">權限 / 密碼 / 指派</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content class="px-3 pt-2 pb-2 text-blue-800/80 text-xs min-h-[40px]">
+              新增記錄人員帳號、重設密碼，以及指派各人員負責的比賽組別。
+            </mat-card-content>
+            
+            <div class="px-3 pb-3 mt-auto text-right">
+              <button mat-stroked-button color="primary" class="bg-white !h-8 text-xs w-full">管理帳號</button>
+            </div>
+          </mat-card>
+
+        </ng-container>
+
+        <ng-container *ngIf="user?.role !== 'admin' && user?.role !== 'Admin'">
+          
+          <mat-card class="rounded-xl shadow-sm border border-emerald-200 border-l-[6px] border-l-emerald-500 hover:shadow-md transition cursor-pointer overflow-hidden relative group col-span-1 md:col-span-2"
+                    style="background-color: #ecfdf5;"
+                    *ngIf="currentCompetition"
+                    [routerLink]="['/competition', currentCompetition._id, 'record']">
+            
+            <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-15 transition pointer-events-none">
+              <mat-icon class="text-9xl text-emerald-600">timer</mat-icon>
+            </div>
+
+            <mat-card-header class="pt-3 px-3">
+              <div mat-card-avatar class="bg-white text-emerald-600 flex items-center justify-center rounded-full w-10 h-10 shadow-sm">
+                <mat-icon>assignment</mat-icon>
+              </div>
+              <mat-card-title class="text-base font-bold text-emerald-900 pt-1 mb-0">成績輸入與編排</mat-card-title>
+              <mat-card-subtitle class="text-emerald-700 text-xs font-bold mt-0">
+                {{ currentCompetition.name }}
+              </mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content class="px-3 pt-2 pb-2 text-emerald-800/80 text-xs min-h-[40px]">
+              進入您負責的組別，進行成績登錄、確認名次，並執行下一輪晉級編排作業。
+            </mat-card-content>
+            
+            <div class="px-3 pb-3 mt-auto text-right">
+              <button mat-flat-button color="primary" class="!h-10 text-sm px-6 w-full md:w-auto">
+                開始作業 <mat-icon iconPositionEnd class="text-sm scale-75">arrow_forward</mat-icon>
+              </button>
+            </div>
+          </mat-card>
+
+          <mat-card *ngIf="!currentCompetition && !isLoadingRecent"
+                    class="rounded-xl shadow-sm border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center col-span-2 p-6">
+             <div class="text-center text-gray-400">
+               <mat-icon class="text-4xl mb-1">event_busy</mat-icon>
+               <p class="text-sm">目前沒有指派給您的賽事</p>
+             </div>
+          </mat-card>
+
+        </ng-container>
+
+      </div>
+
+      <div class="lg:col-span-1 h-full max-h-[calc(100vh-140px)]"> 
+        
+        <mat-card class="rounded-xl shadow-sm border border-orange-200 border-l-[6px] border-l-orange-500 overflow-hidden h-full flex flex-col"
+                  style="background-color: #fff7ed;">
+          
+          <div class="p-2 border-b border-orange-200 bg-orange-100/50 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="bg-white text-orange-600 p-1 rounded-full shadow-sm">
+                 <mat-icon class="text-sm w-4 h-4 leading-4 flex items-center justify-center">campaign</mat-icon>
+              </div>
+              <h2 class="text-sm font-bold text-orange-900 m-0">最新成績</h2>
+            </div>
+
+            <button mat-icon-button class="w-8 h-8 leading-8 text-orange-700 bg-white/50 hover:bg-white" 
+                    matTooltip="查看成績總表"
+                    *ngIf="currentCompetition"
+                    [routerLink]="['/competition', currentCompetition._id, 'results-overview']">
+              <mat-icon class="text-lg">list_alt</mat-icon>
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-0 custom-scrollbar bg-white">
+            
+            <mat-list *ngIf="!isLoadingRecent && recentEvents.length > 0" class="pt-0">
+              <div *ngFor="let event of recentEvents; let last = last">
+                
+                <mat-list-item class="h-auto py-2 hover:bg-orange-50 transition cursor-pointer border-l-[3px] border-transparent hover:border-orange-400" 
+                               (click)="openResultDialog(event)">
+                  
+                  <span matListItemTitle class="font-bold text-gray-800 text-xs mb-0.5 leading-tight truncate">
+                    {{ event.name }}
+                  </span>
+                  
+                  <span matListItemLine class="text-[10px] text-gray-500 flex items-center justify-between mt-0.5">
+                    <span class="truncate max-w-[80px]">{{ event.groupId?.name }}</span>
+                    <span class="bg-orange-100 text-orange-800 px-1.5 py-[1px] rounded text-[9px] font-bold">
+                      {{ event.currentRound || '決賽' }}
+                    </span>
+                  </span>
+
+                  <span matListItemLine class="text-[9px] text-gray-400 mt-1 flex items-center gap-1">
+                    <mat-icon class="text-[9px] w-3 h-3 text-gray-300">history</mat-icon>
+                    {{ event.updatedAt | date:'MM/dd HH:mm' }}
+                  </span>
+
+                </mat-list-item>
+                <mat-divider *ngIf="!last"></mat-divider>
+              </div>
+            </mat-list>
+
+            <div *ngIf="!isLoadingRecent && recentEvents.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-300">
+               <mat-icon class="text-3xl mb-1 opacity-50">inbox</mat-icon>
+               <p class="text-[10px]">尚無最新成績</p>
+            </div>
+
+            <div *ngIf="isLoadingRecent" class="flex justify-center py-8">
+              <mat-icon class="animate-spin text-orange-300 text-xl">sync</mat-icon>
+            </div>
+
+          </div>
+          
+          <div class="p-1 border-t border-orange-100 bg-orange-50 text-center text-[9px] text-orange-400">
+            點擊查看詳情
+          </div>
+        </mat-card>
+
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,130 @@
+<app-header></app-header>
+
+<div class="container mx-auto p-4 md:p-6 fade-in max-w-7xl pb-20">
+
+  <div class="flex items-center gap-4 mb-8">
+    <button mat-icon-button (click)="goBack()" class="bg-white shadow-sm border border-gray-200">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800 my-0">成績作業與編排</h1>
+      <p class="text-gray-500 text-sm mt-1">請選擇負責的組別與項目進行作業</p>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-20">
+    <mat-icon class="animate-spin text-gray-400 text-4xl">sync</mat-icon>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    
+    <mat-tab-group animationDuration="0ms" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[500px]">
+      
+      <mat-tab *ngFor="let group of groups" [label]="group.name">
+        
+        <div class="p-6 bg-gray-50 min-h-[500px]">
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <mat-card *ngFor="let event of group.events" 
+                      class="hover:shadow-md transition flex flex-col h-full border-l-[6px]"
+                      [class.border-l-blue-500]="event.type === 'track'"
+                      [class.border-l-green-500]="event.type === 'field'"
+                      [class.border-l-purple-500]="event.type === 'relay'">
+              
+              <mat-card-header class="relative">
+                <mat-card-title class="text-lg font-bold pt-2 pr-8">{{ event.name }}</mat-card-title>
+                <mat-card-subtitle>
+                  <span *ngIf="event.type === 'track'">徑賽</span>
+                  <span *ngIf="event.type === 'field'">田賽</span>
+                  <span *ngIf="event.type === 'relay'">接力賽</span>
+                  <span *ngIf="event.rounds?.length > 0" class="ml-2 text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-0.5 rounded">
+                    {{ event.rounds.join(' → ') }}
+                  </span>
+                </mat-card-subtitle>
+
+                <button mat-icon-button class="absolute right-0 top-1 text-gray-400 hover:text-indigo-500"
+                        [matTooltip]="getAdvancementRule(event)"
+                        matTooltipClass="whitespace-pre-line"
+                        *ngIf="event.rounds?.length > 0">
+                  <mat-icon>info_outline</mat-icon>
+                </button>
+              </mat-card-header>
+
+              <mat-card-content class="flex-1 pt-4">
+                
+                <div class="flex flex-col gap-3">
+                  
+                  <div *ngIf="event.type !== 'field' && !hasInitialHeats(event)" 
+                       class="flex items-center gap-2 text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-100 text-sm">
+                    <mat-icon class="text-amber-500">hourglass_empty</mat-icon>
+                    <div>
+                      <div class="font-bold">等待初始分組</div>
+                      <div class="text-xs opacity-80">請聯絡管理員進行賽道分派</div>
+                    </div>
+                  </div>
+
+                  <div *ngIf="hasInitialHeats(event) || event.type === 'field'" 
+                       class="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-100 text-sm relative overflow-hidden">
+                    <mat-icon class="text-green-500">play_circle</mat-icon>
+                    <div class="flex-1">
+                      <div class="flex justify-between items-center">
+                        <div class="font-bold">賽事進行中</div>
+                        
+                        <span *ngIf="getResultStatus(event)" 
+                              class="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                          {{ getResultStatus(event) }}
+                        </span>
+                      </div>
+
+                      <div class="text-xs opacity-80 mt-0.5">
+                        <span *ngIf="event.currentRound" class="font-bold mr-1">[{{ event.currentRound }}]</span>
+                        {{ event.heats?.length || 0 }} 組選手已就位
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-between text-xs text-gray-500 px-1">
+                    <span>{{ event.athleteCount }} 人/隊 報名</span>
+                    <span *ngIf="event.heats?.length">共 {{ event.heats.length }} 組</span>
+                  </div>
+                </div>
+
+              </mat-card-content>
+
+              <mat-divider></mat-divider>
+
+              <mat-card-actions class="p-4 flex flex-col gap-2">
+                
+                <button mat-flat-button color="primary" class="w-full !py-6" 
+                        *ngIf="hasInitialHeats(event) || event.type === 'field'"
+                        (click)="goToResultEntry(event)">
+                  <mat-icon>timer</mat-icon> 輸入成績 / 檢視名單
+                </button>
+
+                <button mat-stroked-button disabled class="w-full"
+                        *ngIf="event.type !== 'field' && !hasInitialHeats(event)">
+                  <mat-icon>block</mat-icon> 尚未分組
+                </button>
+
+                <button mat-stroked-button color="accent" class="w-full"
+                        *ngIf="hasInitialHeats(event) && isMultiRoundEvent(event) && !shouldHideNextRoundBtn(event)"
+                        (click)="goToNextRoundArrangement(event)">
+                  <mat-icon>alt_route</mat-icon> 下一輪/晉級編排
+                </button>
+
+              </mat-card-actions>
+            </mat-card>
+
+            <div *ngIf="!group.events || group.events.length === 0" class="col-span-full text-center py-20 text-gray-400">
+              <mat-icon class="text-6xl opacity-20 mb-2">playlist_remove</mat-icon>
+              <p>此組別目前沒有比賽項目</p>
+            </div>
+
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+
+  </ng-container>
+</div>
