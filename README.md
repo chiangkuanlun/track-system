@@ -28,6 +28,15 @@ npm start
 後端會同時提供 `client/dist/client/browser` 的前端檔案，預設網址為
 `http://伺服器位址:3000`，健康檢查為 `/api/health`。
 
+若透過 Nginx 子路徑部署，可使用 Angular 的 `--base-href`，例如：
+
+```powershell
+npm run build -- --base-href /track-system/
+```
+
+前端 API 使用相對路徑，會自動跟隨 `/track-system/` 呼叫
+`/track-system/api`。
+
 ## GitHub Codespaces 公開測試
 
 儲存庫已包含 `.devcontainer` 設定。建立 Codespace 後會自動安裝依賴、

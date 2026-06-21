@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class CompetitionService {
-  private apiUrl = '/api';
+  private apiUrl = 'api';
 
   constructor(private http: HttpClient) {}
 

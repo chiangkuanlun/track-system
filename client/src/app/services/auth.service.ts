@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 })
 export class AuthService {
   // 請確認這裡的 IP 與 Port
-  private apiUrl = '/api/users';
+  private apiUrl = 'api/users';
   
   private userKey = 'currentUser';
   private tokenKey = 'token';
