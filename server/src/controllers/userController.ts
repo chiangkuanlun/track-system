@@ -64,7 +64,7 @@ export const registerUser = async (req: AuthRequest, res: Response): Promise<voi
   }
   const user = await User.create({
     name, username, password, role, specialties,
-    assignedGroupIds: role === 'recorder' ? assignedGroupIds : [],
+    assignedGroupIds: role === 'recorder' ? assignedGroupIds.slice(0, 1) : [],
     active: true
   });
   res.status(201).json(userPayload(user));
