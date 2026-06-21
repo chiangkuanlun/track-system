@@ -28,6 +28,13 @@ npm start
 後端會同時提供 `client/dist/client/browser` 的前端檔案，預設網址為
 `http://伺服器位址:3000`，健康檢查為 `/api/health`。
 
+## GitHub Codespaces 公開測試
+
+儲存庫已包含 `.devcontainer` 設定。建立 Codespace 後會自動安裝依賴、
+建置前後端、啟動 MongoDB 與平台，並轉送公開的 3000 埠。
+
+Codespaces 僅供短期測試；停止 Codespace 後公開網址將無法使用。
+
 開發模式可分別執行 `server/npm run dev` 與 `client/npm start`；Angular 已設定
 `/api` 代理到本機 3000 埠。
 
