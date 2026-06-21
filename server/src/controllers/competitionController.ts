@@ -396,7 +396,18 @@ export const getGroups = async (req: AuthRequest, res: Response): Promise<void> 
   const allowed = await filterAssignedGroups(req);
   const query: any = { competitionId: req.params.competitionId };
   if (allowed !== null) query._id = { $in: allowed };
-  const groups = await Group.find(query).sort({ sortOrder: 1, name: 1 }).lean();
+  const groups = await Group.find(query).lean();
+  const educationOrder = ['國小', '國中', '高中', '高職', '社會'];
+  const genderOrder = ['男童', '女童', '男子', '女子', '混合'];
+  const weight = (name: string, order: string[]) => {
+    const index = order.findIndex(label => name.includes(label));
+    return index === -1 ? order.length : index;
+  };
+  groups.sort((a, b) =>
+    weight(a.name, educationOrder) - weight(b.name, educationOrder) ||
+    weight(a.name, genderOrder) - weight(b.name, genderOrder) ||
+    a.name.localeCompare(b.name, 'zh-Hant')
+  );
   const users = await User.find({ role: 'recorder', assignedGroupIds: { $in: groups.map(g => g._id) } })
     .select('name assignedGroupIds').lean();
   res.json(groups.map(group => ({

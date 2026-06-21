@@ -1,0 +1,62 @@
+<app-header></app-header>
+
+<div class="min-h-[calc(100vh-64px)] bg-gray-50 p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">帳號管理</h1>
+        <p class="text-sm text-gray-500">停用帳號、查看分組權限及重設密碼</p>
+      </div>
+      <button mat-stroked-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon> 返回
+      </button>
+    </div>
+
+    <mat-card class="overflow-hidden">
+      <table mat-table [dataSource]="users" class="w-full">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>姓名</th>
+          <td mat-cell *matCellDef="let user" class="font-bold">{{ user.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef>帳號</th>
+          <td mat-cell *matCellDef="let user">{{ user.username }}</td>
+        </ng-container>
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>角色</th>
+          <td mat-cell *matCellDef="let user">
+            {{ user.role === 'admin' ? '管理員' : user.role === 'recorder' ? '記錄人員' : '檢視者' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="groups">
+          <th mat-header-cell *matHeaderCellDef>分組權限</th>
+          <td mat-cell *matCellDef="let user">{{ user.assignedGroupIds?.length || 0 }} 組</td>
+        </ng-container>
+        <ng-container matColumnDef="active">
+          <th mat-header-cell *matHeaderCellDef>啟用</th>
+          <td mat-cell *matCellDef="let user">
+            <mat-slide-toggle
+              [(ngModel)]="user.active"
+              (change)="toggleActive(user)"
+              [disabled]="user._id === currentUser?._id">
+            </mat-slide-toggle>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="password">
+          <th mat-header-cell *matHeaderCellDef>重設密碼</th>
+          <td mat-cell *matCellDef="let user">
+            <div class="flex items-center gap-2 py-2">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-44">
+                <input matInput type="password" placeholder="至少 8 碼" [(ngModel)]="user.newPassword">
+              </mat-form-field>
+              <button mat-stroked-button color="primary" (click)="resetPassword(user)">更新</button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </mat-card>
+  </div>
+</div>

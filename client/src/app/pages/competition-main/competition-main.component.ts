@@ -185,12 +185,12 @@ export class CompetitionMainComponent implements OnInit {
     const newUser = {
       ...this.newRecorderData,
       role: 'recorder',
-      assignedGroupIds: []
+      assignedGroupIds: [this.selectedGroup._id]
     };
 
     this.authService.register(newUser).subscribe({
       next: () => {
-        alert('建立成功');
+        alert(`記錄人員已建立，僅可管理「${this.selectedGroup.name}」`);
         this.isCreatingRecorder = false;
         this.newRecorderData = { name: '', username: '', password: '' };
         this.loadRecorders(); // 重新載入列表

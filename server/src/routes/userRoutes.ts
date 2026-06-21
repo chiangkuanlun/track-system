@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   authUser, bootstrapAdmin, registerUser, getUserProfile,
-  getRecorders, assignGroup, updateUser
+  getRecorders, getUsers, assignGroup, updateUser
 } from '../controllers/userController';
 import { protect, admin } from '../middleware/authMiddleware';
 
@@ -12,6 +12,7 @@ router.post('/bootstrap', bootstrapAdmin);
 router.post('/register', protect, admin, registerUser);
 router.get('/profile', protect, getUserProfile);
 router.get('/recorders', protect, admin, getRecorders);
+router.get('/', protect, admin, getUsers);
 router.post('/assign', protect, admin, assignGroup);
 router.put('/:id', protect, admin, updateUser);
 

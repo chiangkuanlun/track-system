@@ -46,7 +46,10 @@ export const bootstrapAdmin = async (req: Request, res: Response): Promise<void>
 };
 
 export const registerUser = async (req: AuthRequest, res: Response): Promise<void> => {
-  const { name, username, password, role = 'recorder', specialties = [] } = req.body;
+  const {
+    name, username, password, role = 'recorder',
+    specialties = [], assignedGroupIds = []
+  } = req.body;
   if (!name || !username || !password || String(password).length < 8) {
     res.status(400).json({ message: '姓名、帳號及至少 8 碼密碼為必填' });
     return;
@@ -61,7 +64,8 @@ export const registerUser = async (req: AuthRequest, res: Response): Promise<voi
   }
   const user = await User.create({
     name, username, password, role, specialties,
-    assignedGroupIds: [], active: true
+    assignedGroupIds: role === 'recorder' ? assignedGroupIds : [],
+    active: true
   });
   res.status(201).json(userPayload(user));
 };
@@ -73,6 +77,11 @@ export const getUserProfile = async (req: AuthRequest, res: Response): Promise<v
 export const getRecorders = async (_req: Request, res: Response): Promise<void> => {
   const users = await User.find({ role: 'recorder' }).select('-password').sort({ name: 1 });
   res.json(users);
+};
+
+export const getUsers = async (_req: Request, res: Response): Promise<void> => {
+  const users = await User.find({}).select('-password').sort({ role: 1, name: 1 });
+  res.json(users.map(user => userPayload(user)));
 };
 
 export const assignGroup = async (req: Request, res: Response): Promise<void> => {
@@ -103,6 +112,13 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   if (req.body.name !== undefined) user.name = req.body.name;
   if (req.body.active !== undefined) user.active = Boolean(req.body.active);
   if (req.body.specialties !== undefined) user.specialties = req.body.specialties;
+  if (req.body.password !== undefined) {
+    if (String(req.body.password).length < 8) {
+      res.status(400).json({ message: '密碼至少需要 8 個字元' });
+      return;
+    }
+    user.password = String(req.body.password);
+  }
   if (req.body.assignedGroupIds !== undefined && user.role === 'recorder') {
     user.assignedGroupIds = req.body.assignedGroupIds;
   }

@@ -9,6 +9,7 @@ import { ImportComponent } from './pages/import/import.component';
 import { authGuard } from './guards/auth.guard';
 import { CompetitionEditComponent } from './pages/competition-edit/competition-edit.component';
 import { CompetitionResultsOverviewComponent } from './pages/competition-results-overview/competition-results-overview.component';
+import { AccountManagementComponent } from './pages/account-management/account-management.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -20,6 +21,11 @@ export const routes: Routes = [
   },
   { path: 'import',
     component: ImportComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'accounts',
+    component: AccountManagementComponent,
     canActivate: [authGuard]
   },
   { 
