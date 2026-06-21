@@ -22,6 +22,14 @@ const parsePerformance = (value: unknown): number => {
       return parts.reduce((total, part) => total * 60 + part, 0);
     }
   }
+  const dotParts = text.split('.');
+  if (dotParts.length >= 3 && dotParts.every(part => /^\d+$/.test(part))) {
+    const minutes = Number(dotParts.shift());
+    const seconds = Number(`${dotParts.shift()}.${dotParts.join('')}`);
+    if (Number.isFinite(minutes) && Number.isFinite(seconds)) {
+      return minutes * 60 + seconds;
+    }
+  }
   const number = Number(text);
   return Number.isFinite(number) ? number : 0;
 };
@@ -170,9 +178,11 @@ const parseLegacyRows = (sheet: XLSX.WorkSheet): ImportRow[] => {
     for (const cell of row) {
       const text = clean(cell);
       if (!text) continue;
-      const groupMatch = text.match(/^(?:第?[一二三四五六七八九十\d]+組|組別)\s*[:：、.]?\s*(.+)$/);
+      const groupMatch = text.match(
+        /^(?:第?[一二三四五六七八九十\d]+組|組別)\s*[:：、.]?\s*(.+)$|^[一二三四五六七八九十]+、\s*(.+?)(?:[（(](.+?)[）)])?$/
+      );
       if (groupMatch) {
-        group = clean(groupMatch[1]).replace(/[()（）]/g, '');
+        group = clean(groupMatch[3] || groupMatch[2] || groupMatch[1]).replace(/[()（）]/g, '');
         event = '';
         continue;
       }
@@ -184,7 +194,7 @@ const parseLegacyRows = (sheet: XLSX.WorkSheet): ImportRow[] => {
       if (!group || !event) continue;
 
       if (classifyEvent(event) === 'relay') {
-        const relay = text.match(/^(.+?)\s+([\d:.]+)?\s*[:：]\s*(.+)$/);
+        const relay = text.match(/^(.+?)(?:\s+([\d:.]+))?\s*[:：]\s*(.+)$/);
         if (relay) {
           const team = clean(relay[1]);
           const performance = parsePerformance(relay[2]);
@@ -195,7 +205,9 @@ const parseLegacyRows = (sheet: XLSX.WorkSheet): ImportRow[] => {
         }
       }
 
-      const athlete = text.match(/^(\d+)\s+(.+?)(?:\s*[（(](.+?)[）)])?(?:\s+([\d:.]+))?$/);
+      const athlete = text.match(
+        /^(\d+)\s+(.+?)\s*[（(](.+?)[）)](?:\s+([\d:.]+))?\s*$/
+      );
       if (athlete) {
         output.push({
           group, event,
@@ -208,6 +220,17 @@ const parseLegacyRows = (sheet: XLSX.WorkSheet): ImportRow[] => {
     }
   }
   return output;
+};
+
+export const parseRegistrationWorkbook = (workbook: XLSX.WorkBook): ImportRow[] => {
+  const allRows: ImportRow[] = [];
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    let rows = parseStructuredRows(sheet);
+    if (!rows.length) rows = parseLegacyRows(sheet);
+    allRows.push(...rows);
+  }
+  return allRows;
 };
 
 export const getCompetitions = async (_req: Request, res: Response): Promise<void> => {
@@ -289,9 +312,7 @@ export const importAthletes = async (req: Request, res: Response): Promise<void>
       return;
     }
     const workbook = XLSX.readFile(filePath);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    let rows = parseStructuredRows(sheet);
-    if (!rows.length) rows = parseLegacyRows(sheet);
+    const rows = parseRegistrationWorkbook(workbook);
     if (!rows.length) {
       res.status(422).json({
         message: '找不到可匯入的報名資料',

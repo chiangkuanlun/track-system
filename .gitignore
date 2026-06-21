@@ -13,6 +13,8 @@ server/uploads/*
 
 *.log
 *.bak
+*.xls
+*.xlsx
 npm-debug.log*
 .DS_Store
 Thumbs.db

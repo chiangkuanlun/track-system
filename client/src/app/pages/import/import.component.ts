@@ -16,16 +16,9 @@ import { CompetitionService } from '../../services/competition.service';
   selector: 'app-import',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatIconModule,
-    HeaderComponent
+    CommonModule, FormsModule, MatButtonModule, MatCardModule,
+    MatFormFieldModule, MatInputModule, MatDatepickerModule,
+    MatNativeDateModule, MatIconModule, HeaderComponent
   ],
   templateUrl: './import.component.html'
 })
@@ -38,6 +31,7 @@ export class ImportComponent {
   };
   selectedFile: File | null = null;
   isSubmitting = false;
+  importResult = '';
 
   constructor(
     private competitionService: CompetitionService,
@@ -45,56 +39,55 @@ export class ImportComponent {
     private location: Location
   ) {}
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-    }
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.selectedFile = input.files?.[0] || null;
   }
 
   onSubmit() {
-    // 1. 驗證
-    if (!this.competitionData.name || !this.competitionData.dateStart || !this.competitionData.dateEnd) {
-      alert('請填寫完整賽事資訊');
+    const data = this.competitionData;
+    if (!data.name || !data.location || !data.dateStart || !data.dateEnd) {
+      alert('請填寫賽事名稱、地點與起訖日期');
       return;
     }
 
     this.isSubmitting = true;
-
-    // 2. 先建立賽事
-    this.competitionService.createCompetition(this.competitionData).subscribe({
-      next: (comp: any) => {
-        const newCompetitionId = comp._id;
-        console.log('賽事建立成功 ID:', newCompetitionId);
-
-        // 3. 如果有選檔案，接著上傳
+    this.importResult = '';
+    this.competitionService.createCompetition(data).subscribe({
+      next: (competition: any) => {
         if (this.selectedFile) {
-          this.uploadFile(newCompetitionId);
-        } else {
-          alert('賽事已建立 (無匯入名單)');
-          this.router.navigate(['/dashboard']);
+          this.uploadFile(competition._id);
+          return;
         }
+        alert('賽事已建立（尚未匯入名單）');
+        this.router.navigate(['/dashboard']);
       },
       error: (err: any) => {
-        console.error(err);
-        alert('建立賽事失敗，請檢查網路或伺服器');
         this.isSubmitting = false;
+        alert(err.error?.message || '建立賽事失敗，請檢查欄位資料');
       }
     });
   }
 
-  uploadFile(competitionId: string) {
+  private uploadFile(competitionId: string) {
     if (!this.selectedFile) return;
-
     this.competitionService.importAthletes(competitionId, this.selectedFile).subscribe({
       next: (res: any) => {
-        alert(`成功！賽事已建立並匯入名單。\n(${res.message})`);
+        this.importResult = [
+          res.message,
+          `略過重複：${res.skipped || 0} 筆`,
+          `失敗：${res.failed || 0} 筆`,
+          res.assignedGroups ? `自動分派：${res.assignedGroups} 組` : ''
+        ].filter(Boolean).join('\n');
+        alert(`賽事與名單匯入完成\n${this.importResult}`);
         this.router.navigate(['/dashboard']);
       },
       error: (err: any) => {
-        console.error(err);
-        alert('賽事已建立，但「名單匯入失敗」。\n請確認 Excel 格式正確。');
-        this.router.navigate(['/dashboard']); // 還是跳轉，因為賽事已經建好了
+        const expected = err.error?.expectedColumns?.join('、');
+        const message = err.error?.message || '名單匯入失敗';
+        this.importResult = expected ? `${message}\n建議欄位：${expected}` : message;
+        this.isSubmitting = false;
+        alert(this.importResult);
       }
     });
   }
