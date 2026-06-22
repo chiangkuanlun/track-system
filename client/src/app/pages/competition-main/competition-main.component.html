@@ -140,7 +140,8 @@
             </button>
 
             <mat-card-title class="text-lg font-bold pl-8 pt-1 cursor-pointer hover:text-indigo-600 transition" 
-                            [routerLink]="['/competition/event', event._id]">
+                            [routerLink]="['/competition/event', event._id]"
+                            [queryParams]="{ competitionId: competitionId, groupId: selectedGroup._id }">
               {{ event.name }}
             </mat-card-title>
           </mat-card-header>
@@ -235,7 +236,9 @@
             
             <span class="flex-1"></span>
             
-            <button mat-button color="primary" class="font-bold" [routerLink]="['/competition/event', event._id]">
+            <button mat-button color="primary" class="font-bold"
+                    [routerLink]="['/competition/event', event._id]"
+                    [queryParams]="{ competitionId: competitionId, groupId: selectedGroup._id }">
               進入項目 <mat-icon iconPositionEnd>arrow_forward</mat-icon>
             </button>
           </mat-card-actions>

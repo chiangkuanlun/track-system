@@ -330,6 +330,24 @@ export class EventDetailComponent implements OnInit {
   }
 
   goBack() {
+    const competitionId = this.route.snapshot.queryParamMap.get('competitionId')
+      || this.entityId(this.event?.competitionId);
+    const groupId = this.route.snapshot.queryParamMap.get('groupId')
+      || this.entityId(this.event?.groupId);
+
+    if (competitionId) {
+      this.router.navigate(['/competition', competitionId], {
+        queryParams: groupId ? { groupId } : undefined
+      });
+      return;
+    }
+
     this.location.back();
+  }
+
+  private entityId(value: any): string {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return value._id || value.id || '';
   }
 }

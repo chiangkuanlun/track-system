@@ -80,6 +80,11 @@ export class CompetitionMainComponent implements OnInit {
       next: (data) => {
         this.groups = data;
         this.isLoading = false;
+        const requestedGroupId = this.route.snapshot.queryParamMap.get('groupId');
+        if (requestedGroupId) {
+          const requestedGroup = this.groups.find(group => group._id === requestedGroupId);
+          if (requestedGroup) this.selectGroup(requestedGroup, false);
+        }
       },
       error: (err) => {
         console.error(err);
@@ -88,9 +93,23 @@ export class CompetitionMainComponent implements OnInit {
     });
   }
 
-  selectGroup(group: any) {
+  private selectGroupLegacy(group: any) {
     this.selectedGroup = group;
     this.isAssigningRecorder = false; // 切換組別時關閉選單
+    this.loadEvents(group._id);
+  }
+
+  selectGroup(group: any, updateUrl = true) {
+    this.selectedGroup = group;
+    this.isAssigningRecorder = false;
+    if (updateUrl) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { groupId: group._id },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    }
     this.loadEvents(group._id);
   }
 
