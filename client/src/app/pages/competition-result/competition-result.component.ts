@@ -74,13 +74,17 @@ export class CompetitionResultComponent implements OnInit {
         this.event = evt;
         
         // 2. 取得選手詳細資料 (用來顯示名字)
-        this.competitionService.getAthletesByEventId(this.eventId).subscribe({
-          next: (aths) => {
-            this.athletes = aths;
-            this.isLoading = false;
-          },
-          error: () => this.isLoading = false
-        });
+        if (!evt.heats || evt.heats.length === 0) {
+          this.competitionService.initializeHeats(this.eventId).subscribe({
+            next: () => this.loadData(),
+            error: err => {
+              this.isLoading = false;
+              alert(err.error?.message || '無法建立決賽選手編排');
+            }
+          });
+          return;
+        }
+        this.loadAthletes();
       },
       error: (err) => {
         console.error(err);
@@ -92,6 +96,16 @@ export class CompetitionResultComponent implements OnInit {
   }
 
   // 輔助：透過 ID 找選手資料
+  private loadAthletes() {
+    this.competitionService.getAthletesByEventId(this.eventId).subscribe({
+      next: aths => {
+        this.athletes = aths;
+        this.isLoading = false;
+      },
+      error: () => this.isLoading = false
+    });
+  }
+
   getAthlete(athleteId: string) {
     if (!athleteId) return null;
     return this.athletes.find(a => a._id === athleteId);

@@ -107,12 +107,24 @@ const autoAssignGroups = async (competitionId: string): Promise<number> => {
   const recorders = await User.find({ role: 'recorder', active: true });
   if (!recorders.length) return 0;
   const groups = await Group.find({ competitionId }).sort({ sortOrder: 1, name: 1 });
+  const validGroupIds = new Set(
+    (await Group.find({}).select('_id').lean()).map(group => group._id.toString())
+  );
+  for (const recorder of recorders) {
+    const cleanIds = recorder.assignedGroupIds
+      .filter(Boolean)
+      .filter(id => validGroupIds.has(id.toString()));
+    if (cleanIds.length !== recorder.assignedGroupIds.length) {
+      recorder.assignedGroupIds = cleanIds;
+      await recorder.save();
+    }
+  }
   const load = new Map(recorders.map(user => [user._id.toString(), user.assignedGroupIds.length]));
   let assigned = 0;
 
   for (const group of groups) {
     const alreadyAssigned = recorders.some(user =>
-      user.assignedGroupIds.some(id => id.toString() === group._id.toString())
+      user.assignedGroupIds.some(id => id && id.toString() === group._id.toString())
     );
     if (alreadyAssigned) continue;
 
@@ -413,10 +425,10 @@ export const getGroups = async (req: AuthRequest, res: Response): Promise<void> 
   res.json(groups.map(group => ({
     ...group,
     assigneeNames: users
-      .filter(user => user.assignedGroupIds.some(id => id.toString() === group._id.toString()))
+      .filter(user => user.assignedGroupIds.some(id => id && id.toString() === group._id.toString()))
       .map(user => user.name),
     assigneeName: users.find(user =>
-      user.assignedGroupIds.some(id => id.toString() === group._id.toString())
+      user.assignedGroupIds.some(id => id && id.toString() === group._id.toString())
     )?.name || null
   })));
 };

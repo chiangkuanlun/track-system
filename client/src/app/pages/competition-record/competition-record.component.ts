@@ -105,6 +105,10 @@ export class CompetitionRecordComponent implements OnInit {
     return event.rounds && event.rounds.length > 1;
   }
 
+  isDirectFinal(event: any): boolean {
+    return event.rounds?.length === 1 && event.rounds[0] === '決賽';
+  }
+
   getAdvancementRule(event: any): string {
     const r = event.rounds || [];
 

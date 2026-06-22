@@ -44,7 +44,7 @@ export const admin = (req: AuthRequest, res: Response, next: NextFunction): void
 const canAccessGroup = (user: IUser, groupId: unknown): boolean =>
   user.role === 'admin' ||
   (user.role === 'recorder' &&
-    user.assignedGroupIds.some(id => id.toString() === String(groupId)));
+    user.assignedGroupIds.some(id => id && id.toString() === String(groupId)));
 
 export const groupAccess = (source: 'group' | 'event' | 'athlete') =>
   async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -88,5 +88,5 @@ export const groupAccess = (source: 'group' | 'event' | 'athlete') =>
 export const filterAssignedGroups = async (req: AuthRequest): Promise<string[] | null> => {
   if (!req.user || req.user.role === 'viewer') return [];
   if (req.user.role === 'admin') return null;
-  return req.user.assignedGroupIds.map(id => id.toString());
+  return req.user.assignedGroupIds.filter(Boolean).map(id => id.toString());
 };

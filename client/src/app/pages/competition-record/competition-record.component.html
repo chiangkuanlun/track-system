@@ -55,7 +55,7 @@
                 
                 <div class="flex flex-col gap-3">
                   
-                  <div *ngIf="event.type !== 'field' && !hasInitialHeats(event)" 
+                  <div *ngIf="event.type !== 'field' && !hasInitialHeats(event) && !isDirectFinal(event)"
                        class="flex items-center gap-2 text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-100 text-sm">
                     <mat-icon class="text-amber-500">hourglass_empty</mat-icon>
                     <div>
@@ -64,7 +64,7 @@
                     </div>
                   </div>
 
-                  <div *ngIf="hasInitialHeats(event) || event.type === 'field'" 
+                  <div *ngIf="hasInitialHeats(event) || event.type === 'field' || isDirectFinal(event)"
                        class="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-100 text-sm relative overflow-hidden">
                     <mat-icon class="text-green-500">play_circle</mat-icon>
                     <div class="flex-1">
@@ -97,13 +97,13 @@
               <mat-card-actions class="p-4 flex flex-col gap-2">
                 
                 <button mat-flat-button color="primary" class="w-full !py-6" 
-                        *ngIf="hasInitialHeats(event) || event.type === 'field'"
+                        *ngIf="hasInitialHeats(event) || event.type === 'field' || isDirectFinal(event)"
                         (click)="goToResultEntry(event)">
                   <mat-icon>timer</mat-icon> 輸入成績 / 檢視名單
                 </button>
 
                 <button mat-stroked-button disabled class="w-full"
-                        *ngIf="event.type !== 'field' && !hasInitialHeats(event)">
+                        *ngIf="event.type !== 'field' && !hasInitialHeats(event) && !isDirectFinal(event)">
                   <mat-icon>block</mat-icon> 尚未分組
                 </button>
 

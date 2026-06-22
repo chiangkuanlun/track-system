@@ -30,10 +30,13 @@
 
       <div cdkDropList 
            [cdkDropListData]="heat.lanes" 
+           [cdkDropListSortingDisabled]="true"
            (cdkDropListDropped)="drop($event)"
            class="flex flex-col divide-y divide-gray-100">
 
-        <div *ngFor="let lane of heat.lanes; let laneIdx = index" cdkDrag class="flex items-center hover:bg-blue-50 transition bg-white group">
+        <div *ngFor="let lane of heat.lanes; let laneIdx = index"
+             cdkDrag [cdkDragDisabled]="!lane.athleteId"
+             class="flex items-center hover:bg-blue-50 transition bg-white group">
           
           <div class="w-12 py-3 flex justify-center items-center font-black text-gray-300 bg-gray-50 border-r border-gray-100 select-none">
             {{ laneIdx + 1 }}
