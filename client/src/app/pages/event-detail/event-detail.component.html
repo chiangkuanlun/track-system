@@ -44,8 +44,12 @@
             </button>
           </ng-container>
 
-          <button mat-stroked-button color="primary">
-            <mat-icon>print</mat-icon> 列印名單
+          <button mat-stroked-button color="primary"
+                  *ngIf="canPrintForms()"
+                  [disabled]="isPreparingPrint || isLoading"
+                  (click)="printCurrentRoundForms()">
+            <mat-icon>print</mat-icon>
+            {{ isPreparingPrint ? '準備表單中…' : '列印' + (event?.currentRound || event?.rounds?.[0] || '決賽') + '表單' }}
           </button>
         </div>
       </div>

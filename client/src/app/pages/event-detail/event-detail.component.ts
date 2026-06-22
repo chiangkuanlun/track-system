@@ -15,6 +15,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 
 import { CompetitionService } from '../../services/competition.service';
+import { AuthService } from '../../services/auth.service';
+import { CompetitionFormPrinterService } from '../../services/competition-form-printer.service';
 import { AthleteDialogComponent } from '../../components/athlete-dialog/athlete-dialog.component';
 import { HeaderComponent } from '../../components/header/header.component';
 import { LaneAssignmentDialogComponent} from '../../components/lane-assignment-dialog/lane-assignment-dialog.component';
@@ -36,7 +38,8 @@ import { LaneAssignmentDialogComponent} from '../../components/lane-assignment-d
     DragDropModule
   ],
   templateUrl: './event-detail.component.html',
-  styleUrls: ['./event-detail.component.scss']
+  styleUrls: ['./event-detail.component.scss'],
+  providers: [CompetitionFormPrinterService]
 })
 export class EventDetailComponent implements OnInit {
   eventId: string = '';
@@ -45,6 +48,8 @@ export class EventDetailComponent implements OnInit {
   relayTeams: any[] = []; 
   isLoading = true;
   isSavingHeats = false;
+  isPreparingPrint = false;
+  currentUser: any;
 
   // 表格欄位 (個人項目用)
   displayedColumns: string[] = ['bibNumber', 'name', 'team', 'actions'];
@@ -53,10 +58,14 @@ export class EventDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private competitionService: CompetitionService,
+    private authService: AuthService,
+    private formPrinter: CompetitionFormPrinterService,
     private location: Location,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.currentUser = this.authService.getCurrentUser();
+  }
 
   ngOnInit() {
     this.eventId = this.route.snapshot.paramMap.get('id') || '';
@@ -259,6 +268,65 @@ export class EventDetailComponent implements OnInit {
         this.loadData();
       }
     });
+  }
+
+  canPrintForms(): boolean {
+    return this.currentUser?.role === 'admin' || this.currentUser?.role === 'recorder';
+  }
+
+  printCurrentRoundForms() {
+    if (!this.event || this.isPreparingPrint) return;
+
+    const printWindow = this.formPrinter.openLoadingWindow();
+    if (!printWindow) {
+      alert('瀏覽器已封鎖列印視窗，請允許此網站開啟彈出式視窗後再試一次。');
+      return;
+    }
+
+    this.isPreparingPrint = true;
+    const continuePrint = () => {
+      this.competitionService.getCompetitionById(this.event.competitionId).subscribe({
+        next: competition => {
+          this.competitionService.getGroups(this.event.competitionId).subscribe({
+            next: groups => {
+              const group = groups.find((item: any) => item._id === this.event.groupId) || {
+                _id: this.event.groupId,
+                name: ''
+              };
+              this.isPreparingPrint = false;
+              this.formPrinter.print(printWindow, {
+                competition,
+                group,
+                event: this.event
+              });
+            },
+            error: err => this.handlePrintError(printWindow, err)
+          });
+        },
+        error: err => this.handlePrintError(printWindow, err)
+      });
+    };
+
+    if (this.event.heats?.length) {
+      continuePrint();
+      return;
+    }
+
+    this.competitionService.initializeHeats(this.eventId).subscribe({
+      next: heats => {
+        this.event.heats = heats;
+        this.event.currentRound = this.event.currentRound || this.event.rounds?.[0] || '決賽';
+        continuePrint();
+      },
+      error: err => this.handlePrintError(printWindow, err)
+    });
+  }
+
+  private handlePrintError(printWindow: Window, err: any) {
+    this.isPreparingPrint = false;
+    const message = err.error?.message || '無法準備競賽表單，請確認選手名單與分組資料。';
+    this.formPrinter.showError(printWindow, message);
+    alert(message);
   }
 
   goBack() {
