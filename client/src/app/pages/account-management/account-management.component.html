@@ -2,36 +2,89 @@
 
 <div class="min-h-[calc(100vh-64px)] bg-gray-50 p-6">
   <div class="max-w-6xl mx-auto">
-    <div class="flex items-center justify-between mb-5">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">帳號管理</h1>
-        <p class="text-sm text-gray-500">停用帳號、查看分組權限及重設密碼</p>
+        <p class="text-sm text-gray-500">新增使用者、停用帳號及重設密碼</p>
       </div>
-      <button mat-stroked-button (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon> 返回
-      </button>
+      <div class="flex gap-2">
+        <button mat-flat-button color="primary" (click)="showCreateForm = true" *ngIf="!showCreateForm">
+          <mat-icon>person_add</mat-icon>
+          新增使用者
+        </button>
+        <button mat-stroked-button (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          返回
+        </button>
+      </div>
     </div>
 
-    <mat-card class="overflow-hidden">
-      <table mat-table [dataSource]="users" class="w-full">
+    <mat-card class="p-5 mb-5" *ngIf="showCreateForm">
+      <h2 class="text-lg font-bold text-gray-800 mb-1">新增使用者</h2>
+      <p class="text-sm text-gray-500 mb-4">
+        記錄員建立後尚無分組權限，請到競賽管理的「分派人員」指定其負責分組。
+      </p>
+
+      <form (ngSubmit)="createUser()" class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+        <mat-form-field appearance="outline">
+          <mat-label>姓名</mat-label>
+          <input matInput name="newUserName" [(ngModel)]="newUser.name" autocomplete="name" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>登入帳號</mat-label>
+          <input matInput name="newUsername" [(ngModel)]="newUser.username" autocomplete="off" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>初始密碼</mat-label>
+          <input matInput type="password" name="newPassword" [(ngModel)]="newUser.password"
+                 minlength="8" autocomplete="new-password" required>
+          <mat-hint>至少 8 個字元</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>角色</mat-label>
+          <mat-select name="newUserRole" [(ngModel)]="newUser.role">
+            <mat-option value="recorder">記錄員</mat-option>
+            <mat-option value="viewer">檢視人員</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="md:col-span-2 flex justify-end gap-2 mt-1">
+          <button mat-stroked-button type="button" (click)="cancelCreate()" [disabled]="isSaving">取消</button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSaving">
+            <mat-icon>save</mat-icon>
+            {{ isSaving ? '建立中…' : '建立使用者' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="overflow-x-auto">
+      <table mat-table [dataSource]="users" class="w-full min-w-[850px]">
         <ng-container matColumnDef="name">
           <th mat-header-cell *matHeaderCellDef>姓名</th>
           <td mat-cell *matCellDef="let user" class="font-bold">{{ user.name }}</td>
         </ng-container>
+
         <ng-container matColumnDef="username">
           <th mat-header-cell *matHeaderCellDef>帳號</th>
           <td mat-cell *matCellDef="let user">{{ user.username }}</td>
         </ng-container>
+
         <ng-container matColumnDef="role">
           <th mat-header-cell *matHeaderCellDef>角色</th>
           <td mat-cell *matCellDef="let user">
-            {{ user.role === 'admin' ? '管理員' : user.role === 'recorder' ? '記錄人員' : '檢視者' }}
+            {{ user.role === 'admin' ? '管理員' : user.role === 'recorder' ? '記錄員' : '檢視人員' }}
           </td>
         </ng-container>
+
         <ng-container matColumnDef="groups">
-          <th mat-header-cell *matHeaderCellDef>分組權限</th>
+          <th mat-header-cell *matHeaderCellDef>負責分組</th>
           <td mat-cell *matCellDef="let user">{{ user.assignedGroupIds?.length || 0 }} 組</td>
         </ng-container>
+
         <ng-container matColumnDef="active">
           <th mat-header-cell *matHeaderCellDef>啟用</th>
           <td mat-cell *matCellDef="let user">
@@ -42,12 +95,14 @@
             </mat-slide-toggle>
           </td>
         </ng-container>
+
         <ng-container matColumnDef="password">
           <th mat-header-cell *matHeaderCellDef>重設密碼</th>
           <td mat-cell *matCellDef="let user">
             <div class="flex items-center gap-2 py-2">
               <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-44">
-                <input matInput type="password" placeholder="至少 8 碼" [(ngModel)]="user.newPassword">
+                <input matInput type="password" placeholder="至少 8 個字元"
+                       [(ngModel)]="user.newPassword" autocomplete="new-password">
               </mat-form-field>
               <button mat-stroked-button color="primary" (click)="resetPassword(user)">更新</button>
             </div>

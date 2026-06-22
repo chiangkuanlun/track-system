@@ -63,6 +63,33 @@ mat-card.mat-mdc-card,
   border-radius: 18px !important;
 }
 
+/* 全站輸入欄位：圓角矩形，並保留足夠的左右文字間距。 */
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-shape: 14px;
+  --mdc-filled-text-field-container-shape: 14px;
+}
+
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  border-radius: 14px !important;
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-infix {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.mat-mdc-form-field .mat-mdc-select-trigger {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.mat-mdc-input-element),
+textarea:not(.mat-mdc-input-element),
+select:not(.mat-mdc-select) {
+  border-radius: 12px !important;
+  padding: 0.625rem 0.875rem !important;
+}
+
 /* client/src/styles.scss */
 
 /* =========================================
