@@ -14,7 +14,14 @@
       </div>
     </div>
     
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-2">
+      <button mat-stroked-button color="primary"
+              (click)="printCurrentRoundForms()"
+              [disabled]="isPreparingPrint || isLoading">
+        <mat-icon>print</mat-icon>
+        {{ isPreparingPrint ? '準備表單中…' : '列印' + (event?.currentRound || event?.rounds?.[0] || '決賽') + '表單' }}
+      </button>
+
       <button mat-stroked-button color="warn" (click)="resetResults()" [disabled]="isSaving || isLoading">
       <mat-icon>restart_alt</mat-icon> 清空重置
     </button>

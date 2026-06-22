@@ -14,6 +14,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 
 import { CompetitionService } from '../../services/competition.service';
+import { CompetitionFormPrinterService } from '../../services/competition-form-printer.service';
 import { HeaderComponent } from '../../components/header/header.component';
 
 @Component({
@@ -33,7 +34,8 @@ import { HeaderComponent } from '../../components/header/header.component';
     MatTableModule
   ],
   templateUrl: './competition-result.component.html',
-  styleUrls: ['./competition-result.component.scss']
+  styleUrls: ['./competition-result.component.scss'],
+  providers: [CompetitionFormPrinterService]
 })
 export class CompetitionResultComponent implements OnInit {
   eventId: string = '';
@@ -41,6 +43,7 @@ export class CompetitionResultComponent implements OnInit {
   athletes: any[] = [];
   isLoading = true;
   isSaving = false;
+  isPreparingPrint = false;
 
   statusOptions = [
     { value: 'Normal', label: '正常' },
@@ -55,6 +58,7 @@ export class CompetitionResultComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private competitionService: CompetitionService,
+    private formPrinter: CompetitionFormPrinterService,
     private location: Location
   ) {}
 
@@ -176,6 +180,66 @@ export class CompetitionResultComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  printCurrentRoundForms() {
+    if (!this.event || this.isPreparingPrint) return;
+
+    const printWindow = this.formPrinter.openLoadingWindow();
+    if (!printWindow) {
+      alert('瀏覽器已封鎖列印視窗，請允許此網站開啟彈出式視窗後再試一次。');
+      return;
+    }
+
+    const competitionId = this.entityId(this.event.competitionId);
+    const groupId = this.entityId(this.event.groupId);
+    if (!competitionId || !groupId) {
+      this.formPrinter.showError(printWindow, '競賽或組別資料不完整，無法產生表單。');
+      return;
+    }
+
+    this.isPreparingPrint = true;
+    this.competitionService.getCompetitionById(competitionId).subscribe({
+      next: competition => {
+        this.competitionService.getGroups(competitionId).subscribe({
+          next: groups => {
+            const group = groups.find((item: any) => item._id === groupId);
+            if (!group) {
+              this.handlePrintError(printWindow, { error: { message: '找不到目前負責的競賽組別。' } });
+              return;
+            }
+
+            const printableEvent = {
+              ...this.event,
+              heats: (this.event.heats || []).map((heat: any) => ({
+                ...heat,
+                lanes: (heat.lanes || []).map((lane: any) => ({
+                  ...lane,
+                  athlete: lane.athlete || this.getAthlete(this.entityId(lane.athleteId))
+                }))
+              }))
+            };
+            this.isPreparingPrint = false;
+            this.formPrinter.print(printWindow, { competition, group, event: printableEvent });
+          },
+          error: err => this.handlePrintError(printWindow, err)
+        });
+      },
+      error: err => this.handlePrintError(printWindow, err)
+    });
+  }
+
+  private handlePrintError(printWindow: Window, err: any) {
+    this.isPreparingPrint = false;
+    const message = err.error?.message || '無法準備競賽表單，請稍後再試。';
+    this.formPrinter.showError(printWindow, message);
+    alert(message);
+  }
+
+  private entityId(value: any): string {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return value._id || value.id || '';
   }
 
   goBack() {
