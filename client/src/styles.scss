@@ -37,6 +37,32 @@ html, body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
+/* 全站視覺規範：文字按鈕使用膠囊形，圖示按鈕維持正圓。 */
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button,
+button:not(.mat-mdc-icon-button) {
+  --mdc-text-button-container-shape: 9999px;
+  --mdc-protected-button-container-shape: 9999px;
+  --mdc-filled-button-container-shape: 9999px;
+  --mdc-outlined-button-container-shape: 9999px;
+  border-radius: 9999px !important;
+}
+
+.mat-mdc-icon-button {
+  --mdc-icon-button-state-layer-shape: 50%;
+  border-radius: 50% !important;
+}
+
+/* 全站卡片採一致的圓角矩形。 */
+mat-card.mat-mdc-card,
+.mat-mdc-card {
+  --mdc-elevated-card-container-shape: 18px;
+  --mdc-outlined-card-container-shape: 18px;
+  border-radius: 18px !important;
+}
+
 /* client/src/styles.scss */
 
 /* =========================================
@@ -47,7 +73,7 @@ html, body {
 /* 1. 下拉選單 (Select) */
 .mat-mdc-select-panel {
   background-color: #ffffff !important;
-  border-radius: 4px;
+  border-radius: 14px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
 }
 
@@ -76,6 +102,7 @@ html, body {
   background-color: #ffffff !important;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
   color: #333 !important;
+  border-radius: 18px !important;
 }
 
 /* 確保日曆內部的按鈕與文字顏色正常 */
@@ -90,7 +117,7 @@ html, body {
 /* 5. 對話框 (Dialog) */
 .mdc-dialog__surface {
   background-color: #ffffff !important;
-  border-radius: 8px !important;
+  border-radius: 18px !important;
   padding: 0 !important; /* 避免預設 padding 影響排版 */
 }
 
