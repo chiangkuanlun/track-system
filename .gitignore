@@ -12,6 +12,7 @@ server/uploads/*
 !server/uploads/.gitkeep
 
 *.log
+.dev-logs/
 *.bak
 *.xls
 *.xlsx
